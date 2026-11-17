@@ -1,11 +1,11 @@
 // sw.js — app shell cache so the form opens with no signal
-const CACHE = "fieldlog-v5";
+const CACHE = "fieldlog-v6";
 const SHELL = [
   "./",
   "./index.html",
   "./style.css",
-  "./app.js?v=3",
-  "./ai.js",
+  "./app.js?v=4",
+  "./ai.js?v=3",
   "./manifest.webmanifest",
   "./icon.svg",
   "./vendor/firebase-app.js",
@@ -31,13 +31,14 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(req.url);
   if (url.origin !== location.origin) return; // API calls always go to the network
 
+  // Network first: the app must never show a stale build while online.
+  // The cache is the fallback that lets the form open with no signal.
   e.respondWith(
-    caches.match(req).then((hit) => {
-      const net = fetch(req).then((res) => {
+    fetch(req)
+      .then((res) => {
         if (res.ok) caches.open(CACHE).then((c) => c.put(req, res.clone()));
         return res;
-      }).catch(() => hit);
-      return hit || net;
-    })
+      })
+      .catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html")))
   );
 });
