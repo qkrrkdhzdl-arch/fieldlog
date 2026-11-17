@@ -90,6 +90,7 @@ function itemNode(e, compact = false) {
     <div class="quote">${escapeHtml(e.text)}</div>
     ${e.action ? `<div class="action-line">→ ${escapeHtml(e.action)}</div>` : ""}
     ${e.why ? `<div class="why">근거: ${escapeHtml(e.why)}</div>` : ""}
+    ${e.status === "QUEUED" && e.error ? `<div class="why err">판정 대기 — ${escapeHtml(e.error.slice(0, 160))}</div>` : ""}
     ${compact ? "" : `<label class="confirm"><input type="checkbox" ${e.confirmed ? "checked" : ""}> 현장에서 확인함</label>`}
   `;
   const box = li.querySelector('input[type="checkbox"]');
@@ -157,7 +158,7 @@ async function judge(entry) {
 }
 
 async function saveEntry(text, chips) {
-  const entry = { id: crypto.randomUUID(), ts: new Date().toISOString(), text, chips, status: "QUEUED" };
+  const entry = { id: crypto.randomUUID(), ts: new Date().toISOString(), text, chips, status: "QUEUED", error: "" };
   state.entries.push(entry);
   save();
   renderLists();
