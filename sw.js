@@ -1,16 +1,16 @@
 // sw.js — app shell cache so the form opens with no signal
-const CACHE = "fieldlog-v13";
+const CACHE = "fieldlog-v14";
 const SHELL = [
   "./",
   "./index.html",
   "./style.css",
-  "./app.js?v=11",
-  "./ai.js?v=10",
+  "./app.js?v=12",
+  "./ai.js?v=11",
   "./manifest.webmanifest",
   "./icon.svg",
-  "./vendor/firebase-app.js?v=13",
-  "./vendor/firebase-ai.js?v=13",
-  "./vendor/firebase-app-check.js?v=13"
+  "./vendor/firebase-app.js",
+  "./vendor/firebase-ai.js",
+  "./vendor/firebase-app-check.js"
 ];
 
 self.addEventListener("install", (e) => {
