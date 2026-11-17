@@ -37,13 +37,24 @@ export function getClient() {
   return cached;
 }
 
-// Cloud fallback model. The SDK default (gemini-2.0-flash-lite in 12.5.0) is retired.
-const CLOUD_MODEL = "gemini-2.5-flash";
+// Cloud models. Gemini 2.5 is being retired (2026-12-01 routing), so the app
+// pins current models instead of the SDK default.
+const CLASSIFY_MODEL = "gemini-3.5-flash-lite";
+const REPORT_MODEL = "gemini-3.8-flash";
 
-export function modelFor(mode, modelName = CLOUD_MODEL) {
+export function modelFor(mode, modelName = CLASSIFY_MODEL) {
   const { ai } = getClient();
   const inferenceMode = mode === "PREFER_IN_CLOUD" ? InferenceMode.PREFER_IN_CLOUD : InferenceMode.PREFER_ON_DEVICE;
-  return getGenerativeModel(ai, { mode: inferenceMode, model: modelName });
+  return getGenerativeModel(ai, {
+    mode: inferenceMode,
+    inCloudParams: { model: modelName },
+    onDeviceParams: {
+      createOptions: {
+        expectedInputs: [{ type: "text", languages: ["ko", "en"] }],
+        expectedOutputs: [{ type: "text", languages: ["ko"] }]
+      }
+    }
+  });
 }
 
 /* ── 판정 ─────────────────────────────────────────────────────────────
@@ -116,7 +127,7 @@ const REPORT_RULES = `너는 건설현장 안전점검 일지 작성 보조다.
 - '-다' 평서체. 과장 없이. 각 항목은 한두 문장.`;
 
 export async function draftReport({ site, date, entries, mode, onChunk }) {
-  const model = modelFor(mode);
+  const model = modelFor(mode, REPORT_MODEL);
   const lines = entries.map((e, i) =>
     `${i + 1}. [${riskKo(e.risk)}] ${e.text}` +
     (e.chips?.length ? ` (선택 항목: ${e.chips.join(", ")})` : "") +
