@@ -1,5 +1,5 @@
 // app.js — FieldLog UI, store, offline queue
-import { classify, draftReport, probeOnDevice, riskKo } from "./ai.js?v=8";
+import { classify, draftReport, probeOnDevice, riskKo } from "./ai.js?v=9";
 
 const CHIPS = ["안전난간", "전선 노출", "적재 불량", "통로 적치", "보호구 미착용", "배수 불량"];
 const KEY = "fieldlog.v1";

@@ -1,7 +1,7 @@
 // ai.js — Firebase AI Logic (hybrid: Gemini Nano on-device, Gemini Flash in-cloud)
-import { initializeApp } from "./vendor/firebase-app.js";
-import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from "./vendor/firebase-ai.js";
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "./vendor/firebase-app-check.js";
+import { initializeApp } from "./vendor/firebase-app.js?v=13";
+import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from "./vendor/firebase-ai.js?v=13";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "./vendor/firebase-app-check.js?v=13";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCt2oe086TSZtIUIUHpEkATeffXC5AL3bM",
@@ -161,12 +161,21 @@ export function riskKo(r) {
 /* ── 기기 내 모델 확인 ───────────────────────────────────────────── */
 export async function probeOnDevice() {
   const model = modelFor("PREFER_ON_DEVICE");
+  if (typeof model.initializeDeviceModel !== "function") {
+    const promptApi = !!(self.LanguageModel || (self.ai && self.ai.languageModel));
+    return {
+      ok: false,
+      detail: promptApi
+        ? "이 브라우저에는 내장 모델이 있지만 이 SDK 버전이 기기 내 추론을 노출하지 않습니다."
+        : "이 브라우저에는 Chrome 내장 모델(Prompt API)이 없습니다."
+    };
+  }
   try {
     await model.initializeDeviceModel((p) => {
-      if (typeof p === "number") console.log(`on-device download ${Math.round(p * 100)}%`);
+      if (typeof p === "number") console.log(`on-device model ${Math.round(p * 100)}%`);
     });
   } catch (err) {
-    return { ok: false, detail: err?.message || String(err) };
+    return { ok: false, detail: `기기 내 모델을 준비하지 못했습니다: ${err?.message || err}` };
   }
   try {
     const r = await model.generateContent("한 단어로만 답하시오: 준비");
