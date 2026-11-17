@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>FieldLog — 신호 없는 현장의 안전 일지</title>
+<meta name="description" content="Offline-first construction safety log. Gemini Nano on the device, Gemini Flash in the cloud, through Firebase AI Logic." />
+<meta name="theme-color" content="#14161a" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true">▲</span>
+    <span class="brandtext">FieldLog<small>현장일지</small></span>
+  </div>
+  <div class="pills">
+    <span id="netPill" class="pill net" data-state="on">온라인</span>
+    <span id="enginePill" class="pill engine" title="이 기기에서 어디서 추론하는지">기기 확인 중</span>
+  </div>
+</header>
+
+<main>
+  <!-- 오늘 -->
+  <section id="view-today" class="view">
+    <div class="sitecard">
+      <label class="lbl" for="siteName">현장</label>
+      <input id="siteName" class="siteinput" value="부산 ○○ 신축공사" />
+      <div class="sitemeta"><span id="todayLabel"></span> · <span id="shiftLabel">주간 점검</span></div>
+    </div>
+
+    <div class="stats" id="stats">
+      <div class="stat"><b id="statCount">0</b><span>기록</span></div>
+      <div class="stat high"><b id="statHigh">0</b><span>위험 상</span></div>
+      <div class="stat queued"><b id="statQueue">0</b><span>대기</span></div>
+    </div>
+
+    <form id="captureForm" class="capture">
+      <div class="chips" id="chipRow" role="group" aria-label="자주 쓰는 발견 항목"></div>
+      <div class="inputrow">
+        <textarea id="noteText" rows="3" placeholder="예) 3층 서측 외부 비계 상단 안전난간 미설치, 작업자 2명 접근 중"></textarea>
+        <button type="button" id="micBtn" class="mic" title="음성으로 입력 (Chrome)" aria-label="음성 입력">🎙</button>
+      </div>
+      <div class="actions">
+        <span class="hint" id="captureHint">짧게 적어도 됩니다. 판정 근거는 원문에 붙습니다.</span>
+        <button type="submit" class="primary" id="saveBtn">기록</button>
+      </div>
+    </form>
+
+    <ul id="todayList" class="loglist" aria-live="polite"></ul>
+    <p class="empty" id="todayEmpty">아직 기록이 없습니다. 한 줄이면 충분합니다.</p>
+    <button class="ghost" id="seedBtn" type="button">예시 기록 채우기</button>
+  </section>
+
+  <!-- 기록 -->
+  <section id="view-log" class="view" hidden>
+    <div class="sectionhead">
+      <h2>기록</h2>
+      <div class="filters" id="filters">
+        <button class="fbtn on" data-filter="all">전체</button>
+        <button class="fbtn" data-filter="high">상</button>
+        <button class="fbtn" data-filter="queued">대기</button>
+      </div>
+    </div>
+    <ul id="fullList" class="loglist"></ul>
+    <div class="panel" id="patternPanel" hidden>
+      <h3>7일 반복 지적</h3>
+      <p class="muted" id="patternNote"></p>
+      <ul id="patternList" class="patternlist"></ul>
+    </div>
+    <button class="ghost" id="processBtn" type="button">대기 항목 지금 판정</button>
+  </section>
+
+  <!-- 일지 -->
+  <section id="view-report" class="view" hidden>
+    <div class="sectionhead">
+      <h2>오늘의 일지</h2>
+      <span class="muted" id="reportDate"></span>
+    </div>
+    <div class="actions">
+      <button class="primary" id="draftBtn" type="button">초안 만들기</button>
+      <button class="ghost" id="copyBtn" type="button">복사</button>
+      <button class="ghost" id="printBtn" type="button">인쇄</button>
+    </div>
+    <p class="engine-note" id="draftSource"></p>
+    <textarea id="reportText" class="report" placeholder="초안 만들기를 누르면 확인한 기록만으로 일지 문장을 씁니다."></textarea>
+    <p class="fine">AI 초안입니다. 결재 전에 현장에서 확인한 사실과 대조하세요.</p>
+  </section>
+
+  <!-- 설정 -->
+  <section id="view-settings" class="view" hidden>
+    <div class="sectionhead"><h2>설정</h2></div>
+    <div class="panel">
+      <h3>추론 위치</h3>
+      <label class="radio"><input type="radio" name="mode" value="PREFER_ON_DEVICE" checked /> <span>기기 우선 — 신호가 없어도 기기에서 판정, 안 되면 클라우드</span></label>
+      <label class="radio"><input type="radio" name="mode" value="PREFER_IN_CLOUD" /> <span>클라우드 우선 — 더 큰 모델로 판정</span></label>
+      <p class="fine">기기 내 추론은 Chrome 데스크톱 139 이상에서만 동작합니다. 그 밖의 브라우저는 자동으로 클라우드로 넘어갑니다.</p>
+      <button class="ghost" id="probeBtn" type="button">이 기기의 기기 내 모델 확인</button>
+      <p class="muted" id="probeOut"></p>
+    </div>
+    <div class="panel">
+      <h3>데이터</h3>
+      <p class="fine">기록은 이 브라우저에만 저장됩니다. 서버로 보내는 것은 판정을 요청할 때의 문장뿐입니다.</p>
+      <button class="ghost" id="exportBtn" type="button">JSON으로 내보내기</button>
+      <button class="ghost danger" id="clearBtn" type="button">이 현장 기록 지우기</button>
+    </div>
+    <p class="fine">FieldLog · Firebase AI Logic 하이브리드 추론 · <span id="buildInfo"></span></p>
+  </section>
+</main>
+
+<nav class="tabbar" aria-label="화면 이동">
+  <button class="tab on" data-view="today">오늘</button>
+  <button class="tab" data-view="log">기록</button>
+  <button class="tab" data-view="report">일지</button>
+  <button class="tab" data-view="settings">설정</button>
+</nav>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

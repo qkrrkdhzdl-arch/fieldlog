@@ -1,0 +1,14 @@
+{
+  "name": "FieldLog — 현장일지",
+  "short_name": "FieldLog",
+  "description": "신호가 없는 현장에서 쓰는 안전점검 일지. 기기에서 판정하고, 연결되면 클라우드가 일지를 씁니다.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1115",
+  "theme_color": "#14161a",
+  "lang": "ko",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
