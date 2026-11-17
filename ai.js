@@ -1,7 +1,7 @@
 // ai.js — Firebase AI Logic (hybrid: Gemini Nano on-device, Gemini Flash in-cloud)
-import { initializeApp } from "./vendor/firebase-app.js?v=13";
-import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from "./vendor/firebase-ai.js?v=13";
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "./vendor/firebase-app-check.js?v=13";
+import { initializeApp } from "./vendor/firebase-app.js";
+import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from "./vendor/firebase-ai.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "./vendor/firebase-app-check.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCt2oe086TSZtIUIUHpEkATeffXC5AL3bM",
