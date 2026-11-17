@@ -40,7 +40,7 @@ export function getClient() {
 // Cloud models. Gemini 2.5 is being retired (2026-12-01 routing), so the app
 // pins current models instead of the SDK default.
 const CLASSIFY_MODEL = "gemini-3.5-flash-lite";
-const REPORT_MODEL = "gemini-3.8-flash";
+const REPORT_MODEL = "gemini-3.5-flash-lite";
 
 export function modelFor(mode, modelName = CLASSIFY_MODEL) {
   const { ai } = getClient();
