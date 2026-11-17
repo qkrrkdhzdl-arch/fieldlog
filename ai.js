@@ -123,6 +123,8 @@ const REPORT_RULES = `너는 건설현장 안전점검 일지 작성 보조다.
 
 규칙:
 - 기록에 없는 내용, 수치, 이름, 날짜를 만들지 않는다. 비어 있으면 "기록 없음"이라고 쓴다.
+- '반복 지적'에는 위에 준 목록만 쓴다. 목록이 '없음'이면 "기록 없음"이라고 쓴다.
+- 각 줄은 줄바꿈으로 나누고, 번호는 1. 2. 3. 형식으로 쓴다.
 - 법령 조항을 인용하지 않는다. 확인되지 않은 규정은 쓰지 않는다.
 - '-다' 평서체. 과장 없이. 각 항목은 한두 문장.`;
 
@@ -130,11 +132,19 @@ export async function draftReport({ site, date, entries, mode, onChunk }) {
   const model = modelFor(mode, REPORT_MODEL);
   const lines = entries.map((e, i) =>
     `${i + 1}. [${riskKo(e.risk)}] ${e.text}` +
-    (e.chips?.length ? ` (선택 항목: ${e.chips.join(", ")})` : "") +
+    (e.tags?.length ? ` (분류: ${e.tags.join(", ")})` : "") +
     (e.action ? ` / 조치 제안: ${e.action}` : "")
   ).join("\n");
 
-  const prompt = `${REPORT_RULES}\n\n현장: ${site}\n날짜: ${date}\n점검자: 박가온\n확인된 기록 ${entries.length}건:\n${lines || "기록 없음"}`;
+  // Repeats are counted here, not by the model, so the section cannot invent them.
+  const counts = new Map();
+  entries.forEach((e) => (e.tags || []).forEach((t) => counts.set(t, (counts.get(t) || 0) + 1)));
+  const repeats = [...counts.entries()].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]);
+  const repeatLine = repeats.length
+    ? repeats.map(([t, n]) => `${t} ${n}회`).join(", ")
+    : "없음";
+
+  const prompt = `${REPORT_RULES}\n\n현장: ${site}\n날짜: ${date}\n점검자: 박가온\n확인된 기록 ${entries.length}건:\n${lines || "기록 없음"}\n\n반복 지적(앱이 센 값, 그대로 쓸 것): ${repeatLine}`;
 
   // One request rather than a stream: hybrid streaming keeps the request open
   // for as long as the on-device model is downloading, and the draft is short.
