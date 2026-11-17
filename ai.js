@@ -160,26 +160,28 @@ export function riskKo(r) {
 
 /* ── 기기 내 모델 확인 ───────────────────────────────────────────── */
 export async function probeOnDevice() {
-  const model = modelFor("PREFER_ON_DEVICE");
-  if (typeof model.initializeDeviceModel !== "function") {
-    const promptApi = !!(self.LanguageModel || (self.ai && self.ai.languageModel));
+  const promptApi = !!(self.LanguageModel || (self.ai && self.ai.languageModel));
+  if (!promptApi) {
     return {
       ok: false,
-      detail: promptApi
-        ? "이 브라우저에는 내장 모델이 있지만 이 SDK 버전이 기기 내 추론을 노출하지 않습니다."
-        : "이 브라우저에는 Chrome 내장 모델(Prompt API)이 없습니다."
+      detail: "이 브라우저에는 Chrome 내장 모델(Prompt API)이 없습니다. Chrome 데스크톱 139 이상에서 기기 내 판정이 켜집니다."
     };
   }
+  const model = modelFor("PREFER_ON_DEVICE");
+  if (typeof model.initializeDeviceModel !== "function") {
+    return { ok: false, detail: "이 SDK 버전은 기기 내 추론을 노출하지 않습니다." };
+  }
   try {
-    await model.initializeDeviceModel((p) => {
-      if (typeof p === "number") console.log(`on-device model ${Math.round(p * 100)}%`);
-    });
+    await Promise.race([
+      model.initializeDeviceModel((p) => { if (typeof p === "number") console.log(`on-device model ${Math.round(p * 100)}%`); }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error("20초 안에 모델이 준비되지 않았습니다")), 20000))
+    ]);
   } catch (err) {
     return { ok: false, detail: `기기 내 모델을 준비하지 못했습니다: ${err?.message || err}` };
   }
   try {
     const r = await model.generateContent("한 단어로만 답하시오: 준비");
-    return { ok: r.response.inferenceSource === "ON_DEVICE", detail: `${r.response.inferenceSource} · ${(r.response.text() || "").slice(0, 20)}` };
+    return { ok: r.response.inferenceSource === "ON_DEVICE", detail: `${r.response.inferenceSource}` };
   } catch (err) {
     return { ok: false, detail: err?.message || String(err) };
   }
