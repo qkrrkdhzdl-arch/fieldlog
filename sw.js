@@ -1,10 +1,10 @@
 // sw.js — app shell cache so the form opens with no signal
-const CACHE = "fieldlog-v3";
+const CACHE = "fieldlog-v4";
 const SHELL = [
   "./",
   "./index.html",
   "./style.css",
-  "./app.js",
+  "./app.js?v=2",
   "./ai.js",
   "./manifest.webmanifest",
   "./icon.svg",
