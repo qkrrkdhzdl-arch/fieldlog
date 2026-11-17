@@ -136,20 +136,12 @@ export async function draftReport({ site, date, entries, mode, onChunk }) {
 
   const prompt = `${REPORT_RULES}\n\n현장: ${site}\n날짜: ${date}\n점검자: 박가온\n확인된 기록 ${entries.length}건:\n${lines || "기록 없음"}`;
 
-  if (!onChunk) {
-    const result = await model.generateContent(prompt);
-    return { text: result.response.text(), source: result.response.inferenceSource || "IN_CLOUD" };
-  }
-
-  const stream = await model.generateContentStream(prompt);
-  let text = "";
-  let source = "IN_CLOUD";
-  for await (const chunk of stream.stream) {
-    const piece = chunk.text();
-    if (piece) { text += piece; onChunk(text); }
-    if (chunk.inferenceSource) source = chunk.inferenceSource;
-  }
-  return { text, source };
+  // One request rather than a stream: hybrid streaming keeps the request open
+  // for as long as the on-device model is downloading, and the draft is short.
+  const result = await model.generateContent(prompt);
+  const text = result.response.text() || "";
+  if (onChunk) onChunk(text);
+  return { text, source: result.response.inferenceSource || "IN_CLOUD" };
 }
 
 export function riskKo(r) {

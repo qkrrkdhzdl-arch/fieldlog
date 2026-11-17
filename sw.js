@@ -1,11 +1,11 @@
 // sw.js — app shell cache so the form opens with no signal
-const CACHE = "fieldlog-v7";
+const CACHE = "fieldlog-v8";
 const SHELL = [
   "./",
   "./index.html",
   "./style.css",
-  "./app.js?v=5",
-  "./ai.js?v=4",
+  "./app.js?v=6",
+  "./ai.js?v=5",
   "./manifest.webmanifest",
   "./icon.svg",
   "./vendor/firebase-app.js",

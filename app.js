@@ -1,5 +1,5 @@
 // app.js — FieldLog UI, store, offline queue
-import { classify, draftReport, probeOnDevice, riskKo } from "./ai.js?v=4";
+import { classify, draftReport, probeOnDevice, riskKo } from "./ai.js?v=5";
 
 const CHIPS = ["안전난간", "전선 노출", "적재 불량", "통로 적치", "보호구 미착용", "배수 불량"];
 const KEY = "fieldlog.v1";
@@ -50,7 +50,11 @@ function renderEngine(source) {
     IN_CLOUD: ["클라우드에서 판정", "IN_CLOUD"],
     QUEUED: [`대기 ${queueCount()}건`, "QUEUED"]
   };
-  const [text, key] = map[source] || [queueCount() ? `대기 ${queueCount()}건` : "기기 확인 중", queueCount() ? "QUEUED" : ""];
+  const last = [...state.entries].reverse().find((e) => e.source);
+  const fallback = queueCount() ? [`대기 ${queueCount()}건`, "QUEUED"]
+    : last ? [`${last.source === "ON_DEVICE" ? "기기에서" : "클라우드에서"} 판정`, last.source]
+    : ["기기 확인 중", ""];
+  const [text, key] = map[source] || fallback;
   setPill(el, text, "data-src", key);
 }
 const queueCount = () => state.entries.filter((e) => e.status === "QUEUED").length;
