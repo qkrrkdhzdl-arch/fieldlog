@@ -37,10 +37,13 @@ export function getClient() {
   return cached;
 }
 
-export function modelFor(mode) {
+// Cloud fallback model. The SDK default (gemini-2.0-flash-lite in 12.5.0) is retired.
+const CLOUD_MODEL = "gemini-2.5-flash";
+
+export function modelFor(mode, modelName = CLOUD_MODEL) {
   const { ai } = getClient();
   const inferenceMode = mode === "PREFER_IN_CLOUD" ? InferenceMode.PREFER_IN_CLOUD : InferenceMode.PREFER_ON_DEVICE;
-  return getGenerativeModel(ai, { mode: inferenceMode });
+  return getGenerativeModel(ai, { mode: inferenceMode, model: modelName });
 }
 
 /* ── 판정 ─────────────────────────────────────────────────────────────
